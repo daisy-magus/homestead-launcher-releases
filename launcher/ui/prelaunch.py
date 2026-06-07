@@ -163,7 +163,7 @@ class PreLaunchWindow:
         tk.Label(inner, textvariable=self._acct_type_var,
                  bg=PANEL, fg=VIOLET, font=(FONT, 8)).pack(anchor="w")
 
-        btn_text = "Switch account" if self._saved else "Sign in"
+        btn_text = "Switch account" if self._saved else "Sign in with Microsoft"
         button(inner, btn_text, self._open_account_picker).pack(anchor="w", pady=(8, 0))
 
     def _refresh_account_vars(self) -> None:
@@ -193,11 +193,10 @@ class PreLaunchWindow:
 
         def show_login_choice():
             clear()
-            tk.Label(body, text="HOW WOULD YOU LIKE TO PLAY?",
+            tk.Label(body, text="MICROSOFT ACCOUNT REQUIRED",
                      bg=BG, fg=MUTED, font=(FONT, 8)).pack(pady=(6, 12))
             button(body, "Sign in with Microsoft", pick_microsoft,
                    primary=True, full=True)
-            button(body, "Play offline  (free)", show_offline, full=True)
 
         auto_launch = [False]
 
@@ -206,43 +205,6 @@ class PreLaunchWindow:
             self._result["pending_microsoft"] = True
             auto_launch[0] = True
             top.destroy()
-
-        def show_offline():
-            clear()
-            tk.Label(body, text="CHOOSE A USERNAME",
-                     bg=BG, fg=MUTED, font=(FONT, 8)).pack(pady=(6, 8))
-
-            var = tk.StringVar()
-            entry = tk.Entry(body, textvariable=var, bg=PANEL, fg=FG,
-                             font=(FONT, 11), relief="flat",
-                             insertbackground=CYAN, bd=0,
-                             highlightthickness=1, highlightbackground=BORDER,
-                             highlightcolor=CYAN)
-            entry.pack(fill="x", ipady=7)
-            entry.focus_set()
-
-            err = tk.Label(body, text="", bg=BG, fg=RED, font=(FONT, 8))
-            err.pack(pady=(4, 0))
-
-            row = tk.Frame(body, bg=BG)
-            row.pack(pady=8)
-
-            def confirm(event=None):
-                name = var.get().strip()
-                if not name:
-                    err.config(text="Username cannot be empty.")
-                    return
-                from ..auth import login_offline, save_account
-                from ..config import auth_file
-                acc = login_offline(name)
-                save_account(auth_file(), acc)
-                self._account = acc
-                self._refresh_account_vars()
-                top.destroy()
-
-            entry.bind("<Return>", confirm)
-            button(row, "Back", show_login_choice).pack(side="left", padx=4)
-            button(row, "Continue", confirm, primary=True).pack(side="left", padx=4)
 
         if self._account:
             kind = "OFFLINE" if self._account.offline else "MICROSOFT"
