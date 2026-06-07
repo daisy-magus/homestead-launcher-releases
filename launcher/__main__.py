@@ -122,28 +122,33 @@ def main() -> int:
         return 130
 
     ram_gb  = result["ram_gb"]
-    account = result.get("account")
     jvm_args = [f"-Xmx{ram_gb}G", f"-Xms{max(1, ram_gb // 2)}G"]
 
-    # ── 6. Microsoft login (if requested from pre-launch window) ───────────────
-    if result.get("pending_microsoft"):
-        try:
-            account = auth.login_microsoft()
-            auth.save_account(auth_file(), account)
-        except Exception as e:
-            _msgbox_error("Login failed", str(e))
-            return 1
-
-    if account is None:
-        _msgbox_error("No account", "Please sign in before launching.")
-        return 1
-
-    # ── 7. Progress window + background work ───────────────────────────────────
+    # ── 6+7. Progress window + background work ─────────────────────────────────
     exit_code = [0]
     tailscale_used = [False]
     mc_dir = instance_dir()
+    account_box = [result.get("account")]
 
     def work(win: ProgressWindow) -> None:
+
+        # Microsoft login (moved here so ProgressWindow is visible during browser wait)
+        if result.get("pending_microsoft"):
+            win.update("Sign in with Microsoft…", "Check your browser")
+            try:
+                account_box[0] = auth.login_microsoft()
+                auth.save_account(auth_file(), account_box[0])
+            except Exception as e:
+                win.show_error("Login failed", str(e))
+                exit_code[0] = 1
+                return
+
+        if account_box[0] is None:
+            win.show_error("No account", "Please sign in before launching.")
+            exit_code[0] = 1
+            return
+
+        account = account_box[0]
 
         # Network ──────────────────────────────────────────────────────────────
         win.update("Checking network…", "")
