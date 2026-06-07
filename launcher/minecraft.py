@@ -402,7 +402,7 @@ def launch(
 ) -> subprocess.Popen:
     """Launch Minecraft and return the Popen handle."""
     version_name = find_forge_version_name(mc_dir)
-    write_servers_dat(mc_dir, "Better", server_host, server_port)
+    write_servers_dat(mc_dir, "Better Server", server_host, server_port)
 
     options = {
         "username":      account.username,
