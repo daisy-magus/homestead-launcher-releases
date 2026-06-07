@@ -10,7 +10,11 @@ permissions:
   contents: write   # needed to create GitHub Releases
 
 jobs:
-  # ── Linux AppImage ────────────────────────────────────────────────────────────
+  # ── Linux binary (PyInstaller onefile) ───────────────────────────────────────
+  # Ubuntu 22.04 gives glibc 2.35, compatible with all target distros
+  # (Nobara/Fedora 38+, Mint 21+, Kubuntu 22.04+, Ultramarine).
+  # We don't bundle any JRE — minecraft_launcher_lib downloads Mojang's JRE
+  # into the instance dir at first run. No temp-dir JRE = no AWT crash.
   build-linux:
     runs-on: ubuntu-22.04
     steps:
@@ -23,44 +27,30 @@ jobs:
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y --no-install-recommends \
-            python3 python3-pip python3-tk python3-venv \
-            libfuse2 wget
+            python3 python3-pip python3-tk \
+            libx11-6 libxft2 libfontconfig1
 
       - name: Install Python deps
-        run: pip3 install minecraft-launcher-lib requests platformdirs
+        run: pip3 install pyinstaller minecraft-launcher-lib requests platformdirs
 
-      - name: Install appimage-builder
+      - name: Build binary
         run: |
-          wget -q https://github.com/AppImageCrafters/appimage-builder/releases/download/v1.1.0/appimage-builder-1.1.0-x86_64.AppImage
-          chmod +x appimage-builder-*.AppImage
-          sudo mv appimage-builder-*.AppImage /usr/local/bin/appimage-builder
-
-      - name: Create AppDir structure
-        run: |
-          mkdir -p build/appimage/AppDir/usr/share/homestead
-          mkdir -p build/appimage/AppDir/usr/share/icons/hicolor/256x256/apps
-          cp main.py build/appimage/AppDir/usr/share/homestead/
-          cp -r launcher/ build/appimage/AppDir/usr/share/homestead/launcher/
-          # Placeholder icon — replace with real PNG at build/appimage/homestead.png
-          if [ -f build/appimage/homestead.png ]; then
-            cp build/appimage/homestead.png \
-               build/appimage/AppDir/usr/share/icons/hicolor/256x256/apps/homestead.png
-          fi
-
-      - name: Build AppImage
-        working-directory: build/appimage
-        run: appimage-builder --recipe AppImageBuilder.yml --skip-tests
-
-      - name: Rename output
-        run: |
-          mv build/appimage/Homestead-*.AppImage \
-             Homestead-${{ env.LAUNCHER_VERSION }}-x86_64.AppImage
+          pyinstaller \
+            --onefile \
+            --name Homestead \
+            --hidden-import tkinter \
+            --hidden-import tkinter.ttk \
+            --hidden-import tkinter.font \
+            --collect-submodules minecraft_launcher_lib \
+            main.py
+          chmod +x dist/Homestead
+          mv dist/Homestead Homestead-${{ env.LAUNCHER_VERSION }}-x86_64
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: linux-appimage
-          path: Homestead-*.AppImage
+          name: linux-binary
+          path: Homestead-*-x86_64
 
   # ── Windows installer ─────────────────────────────────────────────────────────
   build-windows:
@@ -136,6 +126,6 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            Homestead-*.AppImage
+            Homestead-*-x86_64
             HomesteadSetup-*.exe
           generate_release_notes: true
