@@ -22,7 +22,9 @@ import tkinter as tk
 from tkinter import ttk
 from typing import Callable
 
-from .widgets import BG, FG, MUTED, BLUE, BTN, RED, FONT, button, center, set_window_icon
+from .widgets import BG, PANEL, FG, MUTED, CYAN, BTN, BORDER, RED, FONT, button, center, set_window_icon
+
+BLUE = CYAN  # local alias
 
 
 class ProgressWindow:
@@ -83,8 +85,8 @@ class ProgressWindow:
         set_window_icon(root)
         center(root, 400, 190)
 
-        tk.Label(root, text="Homestead", bg=BG, fg=BLUE,
-                 font=(FONT, 14, "bold")).pack(pady=(18, 0))
+        tk.Label(root, text="HOMESTEAD", bg=BG, fg=CYAN,
+                 font=(FONT, 13, "bold")).pack(pady=(18, 0))
         self._content = tk.Frame(root, bg=BG)
         self._content.pack(fill="both", expand=True)
         self._render_progress()
@@ -114,8 +116,8 @@ class ProgressWindow:
         style = ttk.Style()
         style.theme_use("default")
         style.configure("H.Horizontal.TProgressbar",
-                        troughcolor=BTN, background=BLUE,
-                        borderwidth=0, thickness=6)
+                        troughcolor=PANEL, background=CYAN,
+                        borderwidth=0, thickness=4)
         self._bar = ttk.Progressbar(
             f, style="H.Horizontal.TProgressbar",
             orient="horizontal", length=320, mode="indeterminate",
@@ -128,19 +130,19 @@ class ProgressWindow:
         center(self._root, 640, 420)
         f = self._content
 
-        tk.Label(f, text="Minecraft is running  —  close this window anytime",
-                 bg=BG, fg=MUTED, font=(FONT, 8)).pack(pady=(6, 2))
+        tk.Label(f, text="MINECRAFT IS RUNNING  —  CLOSE ANYTIME",
+                 bg=BG, fg=MUTED, font=(FONT, 7)).pack(pady=(6, 2))
 
-        outer = tk.Frame(f, bg=BTN)
+        outer = tk.Frame(f, bg=BORDER, padx=1, pady=1)
         outer.pack(fill="both", expand=True, padx=8, pady=(0, 8))
 
-        txt = tk.Text(outer, bg="#0d0d1a", fg="#c8c8d4",
-                      font=("Courier New", 8), relief="flat",
+        txt = tk.Text(outer, bg=PANEL, fg=FG,
+                      font=(FONT, 8), relief="flat",
                       wrap="none", state="disabled", padx=6, pady=4)
         ysb = tk.Scrollbar(outer, command=txt.yview,
-                           bg=BTN, troughcolor=BTN, relief="flat", width=8)
+                           bg=PANEL, troughcolor=PANEL, relief="flat", width=8)
         xsb = tk.Scrollbar(outer, orient="horizontal", command=txt.xview,
-                           bg=BTN, troughcolor=BTN, relief="flat", width=8)
+                           bg=PANEL, troughcolor=PANEL, relief="flat", width=8)
         txt.config(yscrollcommand=ysb.set, xscrollcommand=xsb.set)
         ysb.pack(side="right", fill="y")
         xsb.pack(side="bottom", fill="x")
@@ -156,14 +158,14 @@ class ProgressWindow:
                  bg=BG, fg=RED, font=(FONT, 11, "bold")).pack(pady=(12, 6))
 
         if detail:
-            outer = tk.Frame(f, bg=BTN)
+            outer = tk.Frame(f, bg=BORDER, padx=1, pady=1)
             outer.pack(fill="x", padx=16, pady=(0, 4))
-            txt = tk.Text(outer, bg=BTN, fg=MUTED, font=("Courier", 8),
+            txt = tk.Text(outer, bg=PANEL, fg=MUTED, font=(FONT, 8),
                           height=10, relief="flat", wrap="word", padx=8, pady=6)
             txt.insert("1.0", detail)
             txt.config(state="disabled")
             sb = tk.Scrollbar(outer, command=txt.yview,
-                              bg=BTN, troughcolor=BTN, relief="flat", width=8)
+                              bg=PANEL, troughcolor=PANEL, relief="flat", width=8)
             txt.config(yscrollcommand=sb.set)
             sb.pack(side="right", fill="y")
             txt.pack(side="left", fill="both", expand=True)

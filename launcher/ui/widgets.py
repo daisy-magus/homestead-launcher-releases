@@ -5,14 +5,21 @@ import sys
 import tkinter as tk
 from pathlib import Path
 
-BG    = "#1a1a2e"
-FG    = "#e8e8e8"
-MUTED = "#888888"
-BLUE  = "#4da6ff"
-BTN   = "#2d2d44"
-HOVER = "#3d3d5c"
-RED   = "#ff6b6b"
-FONT  = "Segoe UI"
+# Arcane-share palette
+BG     = "#07070b"
+PANEL  = "#12141e"
+FG     = "#c9d2e0"
+MUTED  = "#6b7488"
+CYAN   = "#5fe3ff"
+VIOLET = "#b083ff"
+BTN    = "#12141e"
+HOVER  = "#1a2535"
+RED    = "#ff7a93"
+BORDER = "#1a2535"   # ~rgba(120,200,255,0.14) composited over #07070b
+
+BLUE = CYAN          # backward-compat alias
+
+FONT = "Consolas" if sys.platform == "win32" else "Monospace"
 
 
 def button(
@@ -24,22 +31,35 @@ def button(
     full: bool = False,
 ) -> tk.Button:
     if primary:
-        bg, fg, hover = BLUE,  "#000000", "#7fbfff"
+        bg, fg, hbg = CYAN,  "#07070b", "#8eeeff"
+        label = text.upper()
     elif danger:
-        bg, fg, hover = RED,   "#000000", "#ff8f8f"
+        bg, fg, hbg = RED,   "#07070b", "#ff9aaa"
+        label = text
     else:
-        bg, fg, hover = BTN,   FG,        HOVER
+        bg, fg, hbg = BTN,   CYAN,      HOVER
+        label = text
 
     b = tk.Button(
-        parent, text=text, command=cmd,
+        parent, text=label, command=cmd,
         bg=bg, fg=fg,
-        font=(FONT, 10, "bold" if primary else "normal"),
+        font=(FONT, 9, "bold"),
         relief="flat", padx=16, pady=7, cursor="hand2",
-        activebackground=hover, activeforeground=fg, bd=0,
+        activebackground=hbg, activeforeground=fg, bd=0,
     )
+    b.bind("<Enter>", lambda _e: b.config(bg=hbg))
+    b.bind("<Leave>", lambda _e: b.config(bg=bg))
     if full:
         b.pack(fill="x", pady=3)
     return b
+
+
+def bordered_frame(parent, **pack_kw) -> tuple[tk.Frame, tk.Frame]:
+    """Return (border_frame, inner_frame). Pack border_frame; add widgets to inner_frame."""
+    outer = tk.Frame(parent, bg=BORDER)
+    inner = tk.Frame(outer, bg=PANEL)
+    inner.pack(fill="both", expand=True, padx=1, pady=1)
+    return outer, inner
 
 
 def center(root: "tk.Tk | tk.Toplevel", w: int, h: int) -> None:
