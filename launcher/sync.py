@@ -7,6 +7,7 @@ from __future__ import annotations
 import hashlib
 import json
 import logging
+import time
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable
@@ -28,8 +29,9 @@ class SyncStats:
 
 def fetch_server_info(gist_url: str, timeout: float = 10.0) -> dict:
     """Fetch the Gist JSON (server info + launcher version + Tailscale key)."""
-    logger.info("Fetching server info from %s", gist_url)
-    resp = requests.get(gist_url, timeout=timeout)
+    url = f"{gist_url}?_={int(time.time())}"
+    logger.info("Fetching server info from %s", url)
+    resp = requests.get(url, timeout=timeout)
     resp.raise_for_status()
     return resp.json()
 

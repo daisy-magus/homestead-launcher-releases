@@ -19,13 +19,17 @@ from .config import VERSION
 logger = logging.getLogger(__name__)
 
 
+def _ver(v: str) -> tuple[int, ...]:
+    try:
+        return tuple(int(x) for x in v.split("."))
+    except ValueError:
+        return (0,)
+
+
 def check_update(server_info: dict) -> str | None:
-    """
-    Return download URL if Gist reports a newer launcher version, else None.
-    Version comparison is simple string comparison — use semver-ordered tags.
-    """
+    """Return download URL if Gist reports a newer launcher version, else None."""
     remote = server_info.get("launcher_version", "")
-    if not remote or remote <= VERSION:
+    if not remote or _ver(remote) <= _ver(VERSION):
         return None
     url = server_info.get("windows_url" if sys.platform == "win32" else "linux_url", "")
     logger.info("Update available: %s → %s  (%s)", VERSION, remote, url)
