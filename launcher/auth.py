@@ -125,7 +125,10 @@ def _open_url(url: str) -> None:
         return
 
     # Ordered list of openers to try. Each is [command, ...args_before_url].
+    # KDE-native openers first — more reliable on Plasma 5/6 than xdg-open's DE detection.
     candidates = [
+        ["kde-open5"],
+        ["kde-open"],
         ["xdg-open"],
         ["gio", "open"],
         ["firefox"],
@@ -170,8 +173,12 @@ def _open_url(url: str) -> None:
     webbrowser.open(url)
 
 
-def login_microsoft() -> MinecraftAccount:
-    """Full interactive Microsoft login (opens browser, waits for redirect)."""
+def login_microsoft(on_url=None) -> MinecraftAccount:
+    """Full interactive Microsoft login (opens browser, waits for redirect).
+
+    on_url: optional callable(url: str) invoked after the browser is launched,
+    so the caller can display the URL as a manual fallback.
+    """
     login_url, state, verifier = microsoft_account.get_secure_login_data(
         client_id=OAUTH_CLIENT_ID,
         redirect_uri=OAUTH_REDIRECT,
@@ -186,6 +193,8 @@ def login_microsoft() -> MinecraftAccount:
 
     try:
         _open_url(login_url)
+        if on_url:
+            on_url(login_url)
         try:
             code, received_state = result_queue.get(timeout=300)
         except _queue_mod.Empty:

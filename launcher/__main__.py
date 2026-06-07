@@ -134,9 +134,24 @@ def main() -> int:
 
         # Microsoft login (moved here so ProgressWindow is visible during browser wait)
         if result.get("pending_microsoft"):
-            win.update("Sign in with Microsoft…", "Check your browser")
+            win.update("Sign in with Microsoft…", "Opening browser…")
             try:
-                account_box[0] = auth.login_microsoft()
+                def _show_url(url: str) -> None:
+                    import tempfile
+                    tmp = Path(tempfile.gettempdir()) / "better-launcher-login.html"
+                    try:
+                        tmp.write_text(
+                            f'<!DOCTYPE html><html><head>'
+                            f'<meta http-equiv="refresh" content="0;url={url}">'
+                            f'</head><body>Redirecting to Microsoft login…</body></html>'
+                        )
+                        win.update("Sign in with Microsoft…",
+                                   f"Browser didn't open?\n"
+                                   f"Open in browser: {tmp}")
+                    except Exception:
+                        win.update("Sign in with Microsoft…",
+                                   "Waiting for sign-in… run with --verbose for the URL.")
+                account_box[0] = auth.login_microsoft(on_url=_show_url)
                 auth.save_account(auth_file(), account_box[0])
             except Exception as e:
                 win.show_error("Login failed", str(e))
