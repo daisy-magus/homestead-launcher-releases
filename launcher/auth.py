@@ -6,7 +6,9 @@ from __future__ import annotations
 
 import json
 import logging
+import shutil
 import socket
+import subprocess
 import threading
 import uuid
 import webbrowser
@@ -96,6 +98,45 @@ def _make_handler(result_queue: "_queue_mod.Queue[tuple[str, str]]"):
 
 # ── Auth flows ─────────────────────────────────────────────────────────────────
 
+def _open_url(url: str) -> None:
+    """Open a URL in the system browser. More reliable than webbrowser on Linux/Wayland."""
+    if sys.platform == "win32":
+        webbrowser.open(url)
+        return
+
+    # Ordered list of openers to try. Each is [command, ...args_before_url].
+    # xdg-open and gio open are the most reliable on modern Linux desktops.
+    candidates = [
+        ["xdg-open"],
+        ["gio", "open"],
+        ["firefox"],
+        ["firefox-bin"],
+        ["chromium"],
+        ["chromium-browser"],
+        ["google-chrome"],
+        ["brave-browser"],
+    ]
+    for parts in candidates:
+        cmd = parts[0]
+        if not shutil.which(cmd):
+            logger.debug("OAuth browser: %s not found", cmd)
+            continue
+        try:
+            proc = subprocess.Popen(
+                parts + [url],
+                start_new_session=True,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
+            logger.debug("OAuth browser: launched %s (pid %d)", " ".join(parts), proc.pid)
+            return
+        except Exception as e:
+            logger.debug("OAuth browser: %s failed: %s", cmd, e)
+
+    logger.warning("OAuth browser: all openers failed, falling back to webbrowser module")
+    webbrowser.open(url)
+
+
 def login_microsoft() -> MinecraftAccount:
     """Full interactive Microsoft login (opens browser, waits for redirect)."""
     login_url, state, verifier = microsoft_account.get_secure_login_data(
@@ -111,8 +152,7 @@ def login_microsoft() -> MinecraftAccount:
     logger.info("OAuth: callback server listening on %s", OAUTH_REDIRECT)
 
     try:
-        opened = webbrowser.open(login_url)
-        logger.debug("OAuth: webbrowser.open returned %s", opened)
+        _open_url(login_url)
         try:
             code, received_state = result_queue.get(timeout=300)
         except _queue_mod.Empty:
