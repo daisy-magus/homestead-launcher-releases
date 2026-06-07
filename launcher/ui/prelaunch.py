@@ -169,9 +169,12 @@ class PreLaunchWindow:
                    primary=True, full=True)
             button(body, "Play offline  (free)", show_offline, full=True)
 
+        auto_launch = [False]
+
         def pick_microsoft():
             self._account = None
             self._result["pending_microsoft"] = True
+            auto_launch[0] = True
             top.destroy()
 
         def show_offline():
@@ -224,6 +227,8 @@ class PreLaunchWindow:
 
         top.wait_window()
         self._refresh_account_vars()
+        if auto_launch[0]:
+            self._on_launch()
 
     # ── RAM card ───────────────────────────────────────────────────────────
 
