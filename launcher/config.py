@@ -9,7 +9,7 @@ from pathlib import Path
 
 from platformdirs import user_config_dir, user_data_dir
 
-VERSION = "1.14.0"
+VERSION = "1.15.0"
 
 APP_NAME   = "HomesteadLauncher"
 APP_AUTHOR = "Homestead"

@@ -11,7 +11,7 @@ import threading
 import uuid
 import webbrowser
 from dataclasses import dataclass
-from http.server import BaseHTTPRequestHandler, HTTPServer
+from http.server import BaseHTTPRequestHandler, HTTPServer, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 
@@ -36,25 +36,30 @@ class MinecraftAccount:
 import queue as _queue_mod
 
 
-def _make_server(port: int, handler) -> HTTPServer:
+def _make_server(port: int, handler) -> ThreadingHTTPServer:
     """
-    Dual-stack callback server: accepts both IPv4 (127.0.0.1) and IPv6 (::1).
-    Firefox resolves 'localhost' to ::1 on many Linux systems, so binding only
-    to 127.0.0.1 silently drops the OAuth redirect.
+    Threaded dual-stack callback server.
+
+    ThreadingHTTPServer is required because Firefox opens speculative TCP
+    connections before navigating, which blocks Python's single-threaded
+    HTTPServer on the idle socket — the actual OAuth redirect with the auth
+    code arrives on a second connection that can never be accepted.
+
+    Dual-stack (AF_INET6 + IPV6_V6ONLY=0) accepts both ::1 and 127.0.0.1
+    since Firefox may resolve localhost to either depending on the system.
     """
     try:
-        class _DualStack(HTTPServer):
+        class _DualStack(ThreadingHTTPServer):
             address_family = socket.AF_INET6
             def server_bind(self):
                 self.socket.setsockopt(socket.IPPROTO_IPV6, socket.IPV6_V6ONLY, 0)
                 super().server_bind()
         srv = _DualStack(("::", port), handler)
-        logger.debug("OAuth: dual-stack server on [::]:%d", port)
+        logger.debug("OAuth: threading dual-stack server on [::]:%d", port)
         return srv
     except OSError:
-        # IPv6 not available — fall back to IPv4 only
         logger.debug("OAuth: IPv6 unavailable, falling back to 127.0.0.1:%d", port)
-        return HTTPServer(("127.0.0.1", port), handler)
+        return ThreadingHTTPServer(("127.0.0.1", port), handler)
 
 
 def _make_handler(result_queue: "_queue_mod.Queue[tuple[str, str]]"):
