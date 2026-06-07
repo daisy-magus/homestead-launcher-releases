@@ -7,7 +7,6 @@ from __future__ import annotations
 import json
 import logging
 import threading
-import time
 import uuid
 import webbrowser
 from dataclasses import dataclass
@@ -33,51 +32,36 @@ class MinecraftAccount:
 
 # ── OAuth callback server ──────────────────────────────────────────────────────
 
-class _CallbackHandler(BaseHTTPRequestHandler):
-    captured_code: str | None = None
-    captured_state: str | None = None
+import queue as _queue_mod
 
-    def log_message(self, *args, **kwargs) -> None:
-        pass
+def _make_handler(result_queue: "_queue_mod.Queue[tuple[str, str]]"):
+    class _CallbackHandler(BaseHTTPRequestHandler):
+        def log_message(self, *args, **kwargs) -> None:
+            pass
 
-    def do_GET(self) -> None:
-        parsed = urlparse(self.path)
-        if parsed.path != "/":
-            self.send_response(404)
+        def do_GET(self) -> None:
+            parsed = urlparse(self.path)
+            # Ignore favicon and other noise — only accept the root callback
+            if parsed.path != "/" or "code" not in parsed.query:
+                self.send_response(204)
+                self.end_headers()
+                return
+            params = parse_qs(parsed.query)
+            code  = params.get("code",  [None])[0]
+            state = params.get("state", [None])[0]
+            if code:
+                result_queue.put((code, state or ""))
+            self.send_response(200)
+            self.send_header("Content-Type", "text/html; charset=utf-8")
             self.end_headers()
-            return
-        params = parse_qs(parsed.query)
-        _CallbackHandler.captured_code  = params.get("code",  [None])[0]
-        _CallbackHandler.captured_state = params.get("state", [None])[0]
-        self.send_response(200)
-        self.send_header("Content-Type", "text/html; charset=utf-8")
-        self.end_headers()
-        self.wfile.write(
-            b"<html><head><title>Logged in</title></head>"
-            b"<body style='font-family:system-ui;max-width:30em;margin:4em auto;text-align:center'>"
-            b"<h2>You can close this tab.</h2>"
-            b"<p>Homestead received your login &mdash; return to the launcher.</p>"
-            b"</body></html>"
-        )
-
-
-def _start_callback_server() -> HTTPServer:
-    server = HTTPServer(("127.0.0.1", OAUTH_PORT), _CallbackHandler)
-    threading.Thread(target=server.serve_forever, daemon=True).start()
-    return server
-
-
-def _wait_for_code(timeout: float = 300.0) -> tuple[str, str]:
-    deadline = time.time() + timeout
-    while _CallbackHandler.captured_code is None:
-        if time.time() > deadline:
-            raise TimeoutError("Timed out waiting for Microsoft login")
-        time.sleep(0.2)
-    code  = _CallbackHandler.captured_code
-    state = _CallbackHandler.captured_state
-    _CallbackHandler.captured_code  = None
-    _CallbackHandler.captured_state = None
-    return code, state
+            self.wfile.write(
+                b"<html><head><title>Logged in</title></head>"
+                b"<body style='font-family:system-ui;max-width:30em;margin:4em auto;text-align:center'>"
+                b"<h2>You can close this tab.</h2>"
+                b"<p>Homestead received your login &mdash; return to the launcher.</p>"
+                b"</body></html>"
+            )
+    return _CallbackHandler
 
 
 # ── Auth flows ─────────────────────────────────────────────────────────────────
@@ -88,10 +72,15 @@ def login_microsoft() -> MinecraftAccount:
         client_id=OAUTH_CLIENT_ID,
         redirect_uri=OAUTH_REDIRECT,
     )
-    server = _start_callback_server()
+    result_queue: _queue_mod.Queue[tuple[str, str]] = _queue_mod.Queue()
+    server = HTTPServer(("127.0.0.1", OAUTH_PORT), _make_handler(result_queue))
+    threading.Thread(target=server.serve_forever, daemon=True).start()
     try:
         webbrowser.open(login_url)
-        code, received_state = _wait_for_code()
+        try:
+            code, received_state = result_queue.get(timeout=300)
+        except _queue_mod.Empty:
+            raise TimeoutError("Timed out waiting for Microsoft login")
         if received_state != state:
             raise ValueError("OAuth state mismatch — possible CSRF")
         result = microsoft_account.complete_login(
