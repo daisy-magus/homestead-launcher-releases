@@ -38,14 +38,27 @@ READY_SIGNAL = "Sound engine started"
 
 # ── Helpers ────────────────────────────────────────────────────────────────────
 
-def _fix_openal() -> None:
-    """Force OpenAL soft backend on Linux to avoid ALSA / PulseAudio issues."""
+def _apply_openal_fix() -> bool:
+    """Write drivers=soft to ~/.alsoftrc. Returns True if the file was changed."""
+    if sys.platform == "win32":
+        return False
+    p = Path.home() / ".alsoftrc"
+    content = p.read_text() if p.exists() else ""
+    if "drivers=soft" in content:
+        return False
+    p.write_text(content.rstrip() + "\ndrivers=soft\n")
+    return True
+
+
+def _revert_openal_fix() -> None:
+    """Remove the drivers=soft line if we wrote it — let the system pick its backend."""
     if sys.platform == "win32":
         return
     p = Path.home() / ".alsoftrc"
-    content = p.read_text() if p.exists() else ""
-    if "drivers=soft" not in content:
-        p.write_text(content.rstrip() + "\ndrivers=soft\n")
+    if not p.exists():
+        return
+    lines = [l for l in p.read_text().splitlines() if l.strip() != "drivers=soft"]
+    p.write_text("\n".join(lines).strip() + ("\n" if lines else ""))
 
 
 def _read_crash_info(mc_dir: Path) -> str:
@@ -84,7 +97,7 @@ def main() -> int:
             print("Logged out.")
         return 0
 
-    _fix_openal()
+    _revert_openal_fix()   # undo old forced drivers=soft; re-applied only if AL errors detected
     install.install_binary()          # copies to ~/.local/bin/ and exec-restarts if needed
     install.install_desktop_entry()   # only runs once we're at the stable path
 
@@ -276,6 +289,7 @@ def main() -> int:
 
         # Stream logs — hide window once Minecraft's main menu loads
         ready = [False]
+        openal_fix_applied = [False]
 
         def stream_logs() -> None:
             for line in proc.stdout:
@@ -284,6 +298,11 @@ def main() -> int:
                 if not ready[0] and READY_SIGNAL in stripped:
                     ready[0] = True
                     win.hide()
+                # Detect OpenAL errors and write the soft-driver fix for next launch
+                if not openal_fix_applied[0] and "AL lib: (EE)" in stripped:
+                    if _apply_openal_fix():
+                        openal_fix_applied[0] = True
+                        logger.info("OpenAL error detected — applied drivers=soft fix for next launch")
 
         log_thread = threading.Thread(target=stream_logs, daemon=True)
         log_thread.start()
