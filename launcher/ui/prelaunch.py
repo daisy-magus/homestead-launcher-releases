@@ -83,7 +83,7 @@ class PreLaunchWindow:
     def run(self) -> dict:
         root = tk.Tk()
         root.title("Homestead")
-        root.resizable(False, False)
+        root.resizable(True, True)
         root.configure(bg=BG)
         root.protocol("WM_DELETE_WINDOW", lambda: self._exit(root))
         self._root = root
@@ -94,12 +94,12 @@ class PreLaunchWindow:
 
         # ── Header ────────────────────────────────────────────────────────
         tk.Label(root, text="Homestead", bg=BG, fg=BLUE,
-                 font=(FONT, 16, "bold")).pack(pady=(20, 2))
+                 font=(FONT, 15, "bold")).pack(pady=(14, 1))
         tk.Label(root, text="Private Modded Server", bg=BG, fg=MUTED,
-                 font=(FONT, 9)).pack(pady=(0, 14))
+                 font=(FONT, 9)).pack(pady=(0, 8))
 
         content = tk.Frame(root, bg=BG)
-        content.pack(fill="both", expand=True, padx=28)
+        content.pack(fill="both", expand=True, padx=20)
 
         self._build_account_card(content)
         self._build_ram_card(content, total_ram, ram_min, ram_max, ram_def)
@@ -108,10 +108,14 @@ class PreLaunchWindow:
             self._build_changelog_card(content, self._changelog)
 
         # ── Launch button ─────────────────────────────────────────────────
-        button(root, "LAUNCH", self._on_launch, primary=True).pack(pady=(14, 22))
+        button(root, "LAUNCH", self._on_launch, primary=True).pack(pady=(10, 16))
 
-        height = 430 if self._changelog else 310
-        center(root, 390, height)
+        # Let tkinter compute natural size, then center that
+        root.update_idletasks()
+        w = max(380, root.winfo_reqwidth())
+        h = max(280, root.winfo_reqheight())
+        root.minsize(320, h)
+        center(root, w, h)
         root.mainloop()
         return self._result
 
