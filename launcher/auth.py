@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import json
 import logging
+import os
 import shutil
 import socket
 import subprocess
@@ -99,6 +100,24 @@ def _make_handler(result_queue: "_queue_mod.Queue[tuple[str, str]]"):
 
 # ── Auth flows ─────────────────────────────────────────────────────────────────
 
+def _clean_env() -> dict:
+    """
+    Return environment with LD_LIBRARY_PATH restored to its pre-PyInstaller value.
+
+    PyInstaller prepends its _MEIPASS directory to LD_LIBRARY_PATH so its bundled
+    .so files are found. Child processes inherit this, causing them to load PyInstaller's
+    library versions instead of system ones — xdg-open silently fails as a result.
+    PyInstaller saves the original value in LD_LIBRARY_PATH_ORIG; we restore it here.
+    """
+    env = os.environ.copy()
+    orig = env.pop("LD_LIBRARY_PATH_ORIG", None)
+    if orig is not None:
+        env["LD_LIBRARY_PATH"] = orig
+    else:
+        env.pop("LD_LIBRARY_PATH", None)
+    return env
+
+
 def _open_url(url: str) -> None:
     """Open a URL in the system browser. More reliable than webbrowser on Linux/Wayland."""
     if sys.platform == "win32":
@@ -106,7 +125,6 @@ def _open_url(url: str) -> None:
         return
 
     # Ordered list of openers to try. Each is [command, ...args_before_url].
-    # xdg-open and gio open are the most reliable on modern Linux desktops.
     candidates = [
         ["xdg-open"],
         ["gio", "open"],
@@ -117,19 +135,33 @@ def _open_url(url: str) -> None:
         ["google-chrome"],
         ["brave-browser"],
     ]
+    env = _clean_env()
     for parts in candidates:
         cmd = parts[0]
         if not shutil.which(cmd):
             logger.debug("OAuth browser: %s not found", cmd)
             continue
         try:
+            # Do NOT use start_new_session=True — it calls setsid() which detaches
+            # from the D-Bus session, breaking xdg-open/portal on Wayland/GNOME.
             proc = subprocess.Popen(
                 parts + [url],
-                start_new_session=True,
+                env=env,
                 stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL,
+                stderr=subprocess.PIPE,
             )
             logger.debug("OAuth browser: launched %s (pid %d)", " ".join(parts), proc.pid)
+            try:
+                _, err = proc.communicate(timeout=5)
+                if proc.returncode != 0:
+                    logger.warning(
+                        "OAuth browser: %s exited %d: %s",
+                        cmd, proc.returncode, err.decode(errors="replace").strip(),
+                    )
+                    continue
+            except subprocess.TimeoutExpired:
+                # Still running after 5s — xdg-open is waiting on the browser, which is fine
+                logger.debug("OAuth browser: %s still running after 5s (browser likely open)", cmd)
             return
         except Exception as e:
             logger.debug("OAuth browser: %s failed: %s", cmd, e)
