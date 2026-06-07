@@ -82,8 +82,8 @@ class PreLaunchWindow:
 
     def run(self) -> dict:
         from ..config import VERSION
-        root = tk.Tk(className="Homestead")
-        root.title(f"Homestead  v{VERSION}")
+        root = tk.Tk(className="BetterLauncher")
+        root.title(f"Better Launcher  v{VERSION}")
         root.resizable(True, True)
         root.configure(bg=BG)
         set_window_icon(root)
@@ -96,7 +96,7 @@ class PreLaunchWindow:
 
         # ── Header ────────────────────────────────────────────────────────
         tk.Label(
-            root, text="HOMESTEAD", bg=BG, fg=CYAN,
+            root, text="BETTER LAUNCHER", bg=BG, fg=CYAN,
             font=(FONT, 16, "bold"),
         ).pack(pady=(18, 2))
         tk.Label(

@@ -1,8 +1,8 @@
 [Desktop Entry]
-Name=Homestead
-Comment=Homestead Private Modded Minecraft Server
-Exec=Homestead
-Icon=homestead
+Name=Better Launcher
+Comment=Better Private Modded Minecraft Server
+Exec=BetterLauncher
+Icon=better-launcher
 Terminal=false
 Type=Application
 Categories=Game;

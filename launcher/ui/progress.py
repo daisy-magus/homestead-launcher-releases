@@ -76,8 +76,8 @@ class ProgressWindow:
     # ── Build ──────────────────────────────────────────────────────────────────
 
     def _build(self) -> None:
-        root = tk.Tk(className="Homestead")
-        root.title("Homestead Launcher")
+        root = tk.Tk(className="BetterLauncher")
+        root.title("Better Launcher")
         root.resizable(False, False)
         root.configure(bg=BG)
         root.protocol("WM_DELETE_WINDOW", lambda: sys.exit(0))
@@ -85,7 +85,7 @@ class ProgressWindow:
         set_window_icon(root)
         center(root, 400, 190)
 
-        tk.Label(root, text="HOMESTEAD", bg=BG, fg=CYAN,
+        tk.Label(root, text="BETTER LAUNCHER", bg=BG, fg=CYAN,
                  font=(FONT, 13, "bold")).pack(pady=(18, 0))
         self._content = tk.Frame(root, bg=BG)
         self._content.pack(fill="both", expand=True)

@@ -4,12 +4,12 @@ AppDir:
   path: ./AppDir
 
   app_info:
-    id: net.arcanist.homestead-launcher
-    name: Homestead
-    icon: homestead
+    id: net.arcanist.better-launcher
+    name: Better Launcher
+    icon: better-launcher
     version: !ENV LAUNCHER_VERSION
     exec: usr/bin/python3
-    exec_args: "$APPDIR/usr/share/homestead/main.py $@"
+    exec_args: "$APPDIR/usr/share/better-launcher/main.py $@"
 
   apt:
     arch: amd64
@@ -40,10 +40,10 @@ AppDir:
   after_bundle:
     - pip3 install --target "$APPDIR/usr/lib/python3/dist-packages"
         minecraft-launcher-lib requests platformdirs
-    - cp -r ../../launcher "$APPDIR/usr/share/homestead/launcher"
-    - cp ../../main.py "$APPDIR/usr/share/homestead/main.py"
+    - cp -r ../../launcher "$APPDIR/usr/share/better-launcher/launcher"
+    - cp ../../main.py "$APPDIR/usr/share/better-launcher/main.py"
 
 AppImage:
   arch: x86_64
-  name: Homestead-!ENV LAUNCHER_VERSION-x86_64
-  update-information: gh-releases-zsync|daisy-magus|homestead-launcher|latest|*x86_64.AppImage.zsync
+  name: BetterLauncher-!ENV LAUNCHER_VERSION-x86_64
+  update-information: gh-releases-zsync|daisy-magus|homestead-launcher-releases|latest|*x86_64.AppImage.zsync

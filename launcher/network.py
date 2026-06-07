@@ -59,7 +59,7 @@ def tailscale_connected() -> bool:
 def tailscale_up(auth_key: str) -> bool:
     """Connect using auth_key. Returns True if connected afterwards."""
     try:
-        r = _ts("up", f"--authkey={auth_key}", "--hostname=homestead-player", timeout=60)
+        r = _ts("up", f"--authkey={auth_key}", "--hostname=better-player", timeout=60)
         if r.returncode != 0:
             logger.warning("tailscale up failed: %s", (r.stderr or r.stdout).strip())
             return False

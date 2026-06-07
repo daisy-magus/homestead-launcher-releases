@@ -34,7 +34,7 @@ fi
 
 # ── Read current Gist ─────────────────────────────────────────────────────────
 echo "→ Fetching current Gist..."
-GIST_JSON=$(curl -sf "https://gist.githubusercontent.com/daisy-magus/${GIST_ID}/raw/homestead-server.json?_=$(date +%s)")
+GIST_JSON=$(curl -sf "https://gist.githubusercontent.com/daisy-magus/${GIST_ID}/raw/better-server.json?_=$(date +%s)")
 
 # Pull all fields we want to preserve unchanged
 GAME_IP=$(echo "$GIST_JSON"    | python3 -c "import sys,json; d=json.load(sys.stdin); print(d['game_ip'])")
@@ -109,8 +109,8 @@ data = {
     "sync_url":         "$SYNC_URL",
     "tailscale_key":    "$TS_KEY",
     "launcher_version": "$NEW_VERSION",
-    "linux_url":        "https://github.com/${REPO}/releases/download/${TAG}/Homestead-linux-x86_64",
-    "windows_url":      "https://github.com/${REPO}/releases/download/${TAG}/HomesteadSetup.exe",
+    "linux_url":        "https://github.com/${REPO}/releases/download/${TAG}/BetterLauncher-linux-x86_64",
+    "windows_url":      "https://github.com/${REPO}/releases/download/${TAG}/BetterLauncherSetup.exe",
     "pack_version":     "$PACK_VER",
     "pack_changelog":   "$PACK_LOG",
 }
@@ -121,7 +121,7 @@ PYEOF
 gh api \
   --method PATCH \
   "/gists/${GIST_ID}" \
-  --field "files[homestead-server.json][content]=${NEW_CONTENT}" \
+  --field "files[better-server.json][content]=${NEW_CONTENT}" \
   --jq '.updated_at' | xargs -I{} echo "  Gist updated at {}"
 
 echo ""

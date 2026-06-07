@@ -1,4 +1,4 @@
-name: Build Homestead Launcher
+name: Build Better Launcher
 
 on:
   push:
@@ -37,21 +37,21 @@ jobs:
         run: |
           pyinstaller \
             --onefile \
-            --name Homestead \
+            --name BetterLauncher \
             --hidden-import tkinter \
             --hidden-import tkinter.ttk \
             --hidden-import tkinter.font \
             --collect-submodules minecraft_launcher_lib \
             --add-data "assets/homestead.png:assets" \
             main.py
-          chmod +x dist/Homestead
-          mv dist/Homestead Homestead-linux-x86_64
+          chmod +x dist/BetterLauncher
+          mv dist/BetterLauncher BetterLauncher-linux-x86_64
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: linux-binary
-          path: Homestead-linux-x86_64
+          path: BetterLauncher-linux-x86_64
 
   # ── Windows installer ─────────────────────────────────────────────────────────
   build-windows:
@@ -92,7 +92,7 @@ jobs:
       - name: Build stub EXE
         working-directory: build\windows
         run: |
-          pyinstaller --onefile --windowed --name Homestead --icon ..\..\assets\homestead.ico stub.py
+          pyinstaller --onefile --windowed --name BetterLauncher --icon ..\..\assets\homestead.ico stub.py
 
       - name: Build installer
         run: |
@@ -102,13 +102,13 @@ jobs:
       - name: Rename output
         shell: pwsh
         run: |
-          Move-Item "build\windows\Output\HomesteadSetup-*.exe" HomesteadSetup.exe
+          Move-Item "build\windows\Output\BetterLauncherSetup-*.exe" BetterLauncherSetup.exe
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: windows-installer
-          path: HomesteadSetup.exe
+          path: BetterLauncherSetup.exe
 
   # ── GitHub Release ────────────────────────────────────────────────────────────
   release:
@@ -125,6 +125,6 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            Homestead-linux-x86_64
-            HomesteadSetup.exe
+            BetterLauncher-linux-x86_64
+            BetterLauncherSetup.exe
           generate_release_notes: true

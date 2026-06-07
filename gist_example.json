@@ -9,8 +9,8 @@
   "tailscale_key": "tskey-auth-REPLACE_THIS",
 
   "launcher_version": "1.0.0",
-  "linux_url":   "https://github.com/daisy-magus/homestead-launcher/releases/download/v1.0.0/Homestead-1.0.0-x86_64.AppImage",
-  "windows_url": "https://github.com/daisy-magus/homestead-launcher/releases/download/v1.0.0/HomesteadSetup-1.0.0.exe",
+  "linux_url":   "https://github.com/daisy-magus/homestead-launcher-releases/releases/download/v1.0.0/BetterLauncher-linux-x86_64",
+  "windows_url": "https://github.com/daisy-magus/homestead-launcher-releases/releases/download/v1.0.0/BetterLauncherSetup.exe",
 
   "pack_version":   "1.0.0",
   "pack_changelog": "- Added Create mod\n- Updated Sodium to 0.5.11\n- Fixed crash on world load"

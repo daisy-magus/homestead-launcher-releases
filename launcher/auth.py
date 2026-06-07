@@ -92,7 +92,7 @@ def _make_handler(result_queue: "_queue_mod.Queue[tuple[str, str]]"):
                 b"<html><head><title>Logged in</title></head>"
                 b"<body style='font-family:system-ui;max-width:30em;margin:4em auto;text-align:center'>"
                 b"<h2>You can close this tab.</h2>"
-                b"<p>Homestead received your login &mdash; return to the launcher.</p>"
+                b"<p>Better Launcher received your login &mdash; return to the launcher.</p>"
                 b"</body></html>"
             )
     return _CallbackHandler

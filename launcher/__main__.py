@@ -1,5 +1,5 @@
 """
-Homestead Launcher — main entry point.
+Better Launcher — main entry point.
 
 Launch flow:
   1. Fetch Gist (internet, no Tailscale needed)
@@ -31,7 +31,7 @@ from .config import (
 from .ui.prelaunch import PreLaunchWindow
 from .ui.progress import ProgressWindow
 
-logger = logging.getLogger("homestead")
+logger = logging.getLogger("better")
 
 READY_SIGNAL = "Sound engine started"
 
@@ -156,7 +156,7 @@ def main() -> int:
             host, port = lan_ip, game_port
             logger.info("LAN reachable — bypassing Tailscale")
         else:
-            win.update("Connecting to Homestead network…", "")
+            win.update("Connecting to Better network…", "")
             if not tailscale_key:
                 win.show_error(
                     "Cannot connect",
@@ -167,7 +167,7 @@ def main() -> int:
                 return
             if not network.ensure_connected(tailscale_key):
                 win.show_error(
-                    "Could not connect to Homestead network",
+                    "Could not connect to Better network",
                     "Make sure you have an internet connection.\n\n"
                     "If this keeps happening, ask Darcy to rotate the network key.",
                 )

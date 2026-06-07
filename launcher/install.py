@@ -2,7 +2,7 @@
 Linux binary self-install + .desktop entry + icon installation.
 
 On first run from any location (e.g. ~/Downloads), the binary copies
-itself to ~/.local/bin/Homestead and exec-restarts from there. The
+itself to ~/.local/bin/BetterLauncher and exec-restarts from there. The
 .desktop file always points to that stable path. No-op on Windows or
 when running from source (unfrozen).
 """
@@ -17,14 +17,14 @@ from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
-_INSTALL_PATH = Path.home() / ".local/bin/Homestead"
-_ICON_NAME    = "homestead-launcher"
-_DESKTOP_ID   = "homestead-launcher.desktop"
+_INSTALL_PATH = Path.home() / ".local/bin/BetterLauncher"
+_ICON_NAME    = "better-launcher"
+_DESKTOP_ID   = "better-launcher.desktop"
 
 
 def install_binary() -> None:
     """
-    Copy binary to ~/.local/bin/Homestead if not already running from there,
+    Copy binary to ~/.local/bin/BetterLauncher if not already running from there,
     then exec-restart. Never returns if a copy was needed.
     """
     if sys.platform == "win32" or not getattr(sys, "frozen", False):
@@ -69,13 +69,13 @@ def install_desktop_entry() -> None:
     desktop_dir.mkdir(parents=True, exist_ok=True)
     desktop_file.write_text(
         "[Desktop Entry]\n"
-        "Name=Homestead Launcher\n"
-        "Comment=Private Modded Minecraft Server\n"
+        "Name=Better Launcher\n"
+        "Comment=Better Private Modded Minecraft Server\n"
         f"Exec={exe}\n"
         f"Icon={_ICON_NAME}\n"
         "Type=Application\n"
         "Categories=Game;\n"
-        "StartupWMClass=Homestead\n"
+        "StartupWMClass=BetterLauncher\n"
         "StartupNotify=true\n"
     )
     logger.info("Installed desktop entry: %s", desktop_file)

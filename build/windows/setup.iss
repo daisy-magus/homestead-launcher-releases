@@ -1,21 +1,21 @@
-; Homestead Launcher — Inno Setup script
-; Installs per-user (no UAC) into %LOCALAPPDATA%\HomesteadLauncher
+; Better Launcher — Inno Setup script
+; Installs per-user (no UAC) into %LOCALAPPDATA%\BetterLauncher
 
-#define MyAppName "Homestead Launcher"
+#define MyAppName "Better Launcher"
 #define MyAppVersion GetEnv("LAUNCHER_VERSION")
-#define MyAppPublisher "Homestead"
-#define MyAppExeName "Homestead.exe"
+#define MyAppPublisher "Better"
+#define MyAppExeName "BetterLauncher.exe"
 
 [Setup]
 AppId={{B4F7E2A1-C3D8-4B2E-9F1A-7E3C5D6B8A2F}}
 AppName={#MyAppName}
 AppVersion={#MyAppVersion}
 AppPublisher={#MyAppPublisher}
-DefaultDirName={localappdata}\HomesteadLauncher
+DefaultDirName={localappdata}\BetterLauncher
 DefaultGroupName={#MyAppName}
 ; Per-user install — no UAC, no admin required
 PrivilegesRequired=lowest
-OutputBaseFilename=HomesteadSetup-{#MyAppVersion}
+OutputBaseFilename=BetterLauncherSetup-{#MyAppVersion}
 Compression=lzma2/ultra64
 SolidCompression=yes
 WizardStyle=modern
@@ -35,17 +35,17 @@ Source: "..\..\launcher\*"; DestDir: "{app}\launcher"; Flags: ignoreversion recu
 Source: "..\..\main.py"; DestDir: "{app}"; Flags: ignoreversion
 
 ; Launcher stub exe (built by PyInstaller in a separate step — just a thin wrapper)
-Source: "dist\Homestead.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "dist\BetterLauncher.exe"; DestDir: "{app}"; Flags: ignoreversion
 
 [Icons]
-Name: "{group}\Homestead"; Filename: "{app}\{#MyAppExeName}"
-Name: "{commondesktop}\Homestead"; Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon
+Name: "{group}\Better"; Filename: "{app}\{#MyAppExeName}"
+Name: "{commondesktop}\Better"; Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon
 
 [Tasks]
 Name: "desktopicon"; Description: "Create a desktop shortcut"; GroupDescription: "Additional icons:"
 
 [Run]
-Filename: "{app}\{#MyAppExeName}"; Description: "Launch Homestead"; Flags: nowait postinstall skipifsilent
+Filename: "{app}\{#MyAppExeName}"; Description: "Launch Better"; Flags: nowait postinstall skipifsilent
 
 [UninstallDelete]
 Type: filesandordirs; Name: "{app}"

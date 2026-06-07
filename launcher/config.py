@@ -11,8 +11,8 @@ from platformdirs import user_config_dir, user_data_dir
 
 VERSION = "1.21.0"
 
-APP_NAME   = "HomesteadLauncher"
-APP_AUTHOR = "Homestead"
+APP_NAME   = "BetterLauncher"
+APP_AUTHOR = "Better"
 
 MC_VERSION    = "1.20.1"
 FORGE_VERSION = "1.20.1-47.4.10"
@@ -26,7 +26,7 @@ FORGE_MAVEN_URL = (
 # GitHub Gist — single source of truth for server info + launcher updates + Tailscale key
 GIST_URL = (
     "https://gist.githubusercontent.com/daisy-magus/"
-    "7a8201ed67cc3097e0430d1c9df038ab/raw/homestead-server.json"
+    "7a8201ed67cc3097e0430d1c9df038ab/raw/better-server.json"
 )
 
 # Prism Launcher's public OAuth client ID — no Azure registration needed

@@ -138,7 +138,7 @@ def _download_forge_jar(dest: Path, progress: ProgressCallback | None = None) ->
         progress("Downloading Forge installer…", 0, 1)
 
     headers = {
-        "User-Agent": "HomesteadLauncher/1.0",
+        "User-Agent": "BetterLauncher/1.0",
         "Referer":    "https://files.minecraftforge.net/",
     }
     tmp = dest.with_suffix(".part")
@@ -241,7 +241,7 @@ def launch(
 ) -> subprocess.Popen:
     """Launch Minecraft and return the Popen handle."""
     version_name = find_forge_version_name(mc_dir)
-    write_servers_dat(mc_dir, "Homestead", server_host, server_port)
+    write_servers_dat(mc_dir, "Better", server_host, server_port)
 
     options = {
         "username":      account.username,

@@ -1,5 +1,5 @@
 """
-Thin Windows stub — compiled to Homestead.exe by PyInstaller (hidden_imports only,
+Thin Windows stub — compiled to BetterLauncher.exe by PyInstaller (hidden_imports only,
 no bundled code). Launches main.py via the embedded Python runtime.
 This is the *only* PyInstaller artefact; all real code runs from plain .py files.
 """

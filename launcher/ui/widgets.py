@@ -77,7 +77,7 @@ def _asset_dir() -> Path:
 
 
 def set_window_icon(root: "tk.Tk | tk.Toplevel") -> None:
-    """Apply the Homestead icon to a tkinter window. Silent no-op if asset missing."""
+    """Apply the Better Launcher icon to a tkinter window. Silent no-op if asset missing."""
     try:
         png = _asset_dir() / "homestead.png"
         if png.exists():
