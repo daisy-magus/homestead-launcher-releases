@@ -23,7 +23,7 @@ import tkinter as tk
 import tkinter.messagebox as mb
 from pathlib import Path
 
-from . import auth, minecraft, network, sync, updater
+from . import auth, install, minecraft, network, sync, updater
 from .config import (
     GIST_URL,
     auth_file, instance_dir, manifest_cache_file, crash_log_file,
@@ -85,6 +85,7 @@ def main() -> int:
         return 0
 
     _fix_openal()
+    install.install_desktop_entry()
 
     # ── 1. Fetch Gist ──────────────────────────────────────────────────────────
     server_info: dict = {}

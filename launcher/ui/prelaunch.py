@@ -17,7 +17,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from ..auth import MinecraftAccount
 
-from .widgets import BG, FG, MUTED, BLUE, BTN, RED, FONT, button, center
+from .widgets import BG, FG, MUTED, BLUE, BTN, RED, FONT, button, center, set_window_icon
 
 
 # ── RAM detection ──────────────────────────────────────────────────────────────
@@ -81,10 +81,11 @@ class PreLaunchWindow:
         self._acct_type_var: tk.StringVar | None = None
 
     def run(self) -> dict:
-        root = tk.Tk()
+        root = tk.Tk(className="Homestead")
         root.title("Homestead")
         root.resizable(True, True)
         root.configure(bg=BG)
+        set_window_icon(root)
         root.protocol("WM_DELETE_WINDOW", lambda: self._exit(root))
         self._root = root
 

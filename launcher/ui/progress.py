@@ -22,7 +22,7 @@ import tkinter as tk
 from tkinter import ttk
 from typing import Callable
 
-from .widgets import BG, FG, MUTED, BLUE, BTN, RED, FONT, button, center
+from .widgets import BG, FG, MUTED, BLUE, BTN, RED, FONT, button, center, set_window_icon
 
 
 class ProgressWindow:
@@ -74,12 +74,13 @@ class ProgressWindow:
     # ── Build ──────────────────────────────────────────────────────────────────
 
     def _build(self) -> None:
-        root = tk.Tk()
+        root = tk.Tk(className="Homestead")
         root.title("Homestead Launcher")
         root.resizable(False, False)
         root.configure(bg=BG)
         root.protocol("WM_DELETE_WINDOW", lambda: sys.exit(0))
         self._root = root
+        set_window_icon(root)
         center(root, 400, 190)
 
         tk.Label(root, text="Homestead", bg=BG, fg=BLUE,

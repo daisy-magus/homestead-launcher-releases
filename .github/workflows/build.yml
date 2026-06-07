@@ -42,6 +42,7 @@ jobs:
             --hidden-import tkinter.ttk \
             --hidden-import tkinter.font \
             --collect-submodules minecraft_launcher_lib \
+            --add-data "assets/homestead.png:assets" \
             main.py
           chmod +x dist/Homestead
           mv dist/Homestead Homestead-linux-x86_64
@@ -91,8 +92,7 @@ jobs:
       - name: Build stub EXE
         working-directory: build\windows
         run: |
-          pyinstaller --onefile --windowed --name Homestead --icon ..\..\build\windows\homestead.ico stub.py 2>nul || echo "No icon found, building without icon"
-          pyinstaller --onefile --windowed --name Homestead stub.py
+          pyinstaller --onefile --windowed --name Homestead --icon ..\..\assets\homestead.ico stub.py
 
       - name: Build installer
         run: |
