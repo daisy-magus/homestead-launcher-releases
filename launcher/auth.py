@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import json
 import logging
+import socket
 import threading
 import uuid
 import webbrowser
@@ -33,6 +34,28 @@ class MinecraftAccount:
 # ── OAuth callback server ──────────────────────────────────────────────────────
 
 import queue as _queue_mod
+
+
+def _make_server(port: int, handler) -> HTTPServer:
+    """
+    Dual-stack callback server: accepts both IPv4 (127.0.0.1) and IPv6 (::1).
+    Firefox resolves 'localhost' to ::1 on many Linux systems, so binding only
+    to 127.0.0.1 silently drops the OAuth redirect.
+    """
+    try:
+        class _DualStack(HTTPServer):
+            address_family = socket.AF_INET6
+            def server_bind(self):
+                self.socket.setsockopt(socket.IPPROTO_IPV6, socket.IPV6_V6ONLY, 0)
+                super().server_bind()
+        srv = _DualStack(("::", port), handler)
+        logger.debug("OAuth: dual-stack server on [::]:%d", port)
+        return srv
+    except OSError:
+        # IPv6 not available — fall back to IPv4 only
+        logger.debug("OAuth: IPv6 unavailable, falling back to 127.0.0.1:%d", port)
+        return HTTPServer(("127.0.0.1", port), handler)
+
 
 def _make_handler(result_queue: "_queue_mod.Queue[tuple[str, str]]"):
     class _CallbackHandler(BaseHTTPRequestHandler):
@@ -78,7 +101,7 @@ def login_microsoft() -> MinecraftAccount:
     logger.debug("OAuth: login_url=%s", login_url)
 
     result_queue: _queue_mod.Queue[tuple[str, str]] = _queue_mod.Queue()
-    server = HTTPServer(("127.0.0.1", OAUTH_PORT), _make_handler(result_queue))
+    server = _make_server(OAUTH_PORT, _make_handler(result_queue))
     threading.Thread(target=server.serve_forever, daemon=True).start()
     logger.info("OAuth: callback server listening on %s", OAUTH_REDIRECT)
 
