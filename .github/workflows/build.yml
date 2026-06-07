@@ -44,13 +44,13 @@ jobs:
             --collect-submodules minecraft_launcher_lib \
             main.py
           chmod +x dist/Homestead
-          mv dist/Homestead Homestead-${{ env.LAUNCHER_VERSION }}-x86_64
+          mv dist/Homestead Homestead-linux-x86_64
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: linux-binary
-          path: Homestead-*-x86_64
+          path: Homestead-linux-x86_64
 
   # ── Windows installer ─────────────────────────────────────────────────────────
   build-windows:
@@ -102,14 +102,13 @@ jobs:
       - name: Rename output
         shell: pwsh
         run: |
-          Move-Item "build\windows\Output\HomesteadSetup-*.exe" `
-                    "HomesteadSetup-$env:LAUNCHER_VERSION.exe"
+          Move-Item "build\windows\Output\HomesteadSetup-*.exe" HomesteadSetup.exe
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: windows-installer
-          path: HomesteadSetup-*.exe
+          path: HomesteadSetup.exe
 
   # ── GitHub Release ────────────────────────────────────────────────────────────
   release:
@@ -126,6 +125,6 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            Homestead-*-x86_64
-            HomesteadSetup-*.exe
+            Homestead-linux-x86_64
+            HomesteadSetup.exe
           generate_release_notes: true
