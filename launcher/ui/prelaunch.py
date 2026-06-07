@@ -54,12 +54,9 @@ def _detect_ram_gb() -> int:
 
 def _ram_range(total_gb: int) -> tuple[int, int, int]:
     """(min_gb, default_gb, max_gb) for the slider."""
-    if total_gb <= 8:
-        return 2, 3, 6
-    elif total_gb <= 16:
-        return 2, 4, 8
-    else:
-        return 2, 6, 12
+    max_gb = max(4, total_gb - 2)       # leave ~2 GB for the OS
+    default_gb = min(max(3, total_gb // 3), max_gb)
+    return 2, default_gb, max_gb
 
 
 # ── Window ─────────────────────────────────────────────────────────────────────
@@ -261,7 +258,7 @@ class PreLaunchWindow:
 
         tk.Label(
             frame,
-            text=f"Suggested {default_gb}–{max_gb} GB. Don't give more than half of {total_gb} GB.",
+            text=f"Default {default_gb} GB · max {max_gb} GB ({total_gb} GB installed)",
             bg=BTN, fg=MUTED, font=(FONT, 7),
         ).pack(anchor="w")
 
