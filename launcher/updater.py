@@ -43,7 +43,7 @@ def perform_update(url: str) -> bool:
     current = Path(sys.executable if getattr(sys, "frozen", False) else sys.argv[0])
     logger.info("Downloading update from %s", url)
 
-    tmp_fd, tmp_path = tempfile.mkstemp(suffix=".new")
+    tmp_fd, tmp_path = tempfile.mkstemp(suffix=".new", dir=current.parent)
     try:
         os.close(tmp_fd)
         tmp = Path(tmp_path)
