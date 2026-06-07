@@ -56,10 +56,11 @@ def install_desktop_entry() -> None:
     )
     logger.info("Installed desktop entry: %s", desktop_file)
 
-    try:
-        subprocess.run(
-            ["update-desktop-database", str(desktop_dir)],
-            capture_output=True, timeout=5,
-        )
-    except Exception:
-        pass
+    for cmd in (
+        ["update-desktop-database", str(desktop_dir)],
+        ["gtk-update-icon-cache", "-f", "-t", str(Path.home() / ".local/share/icons/hicolor")],
+    ):
+        try:
+            subprocess.run(cmd, capture_output=True, timeout=5)
+        except Exception:
+            pass
