@@ -36,19 +36,21 @@ import queue as _queue_mod
 
 def _make_handler(result_queue: "_queue_mod.Queue[tuple[str, str]]"):
     class _CallbackHandler(BaseHTTPRequestHandler):
-        def log_message(self, *args, **kwargs) -> None:
-            pass
+        def log_message(self, fmt, *args, **kwargs) -> None:
+            logger.debug("OAuth callback: %s", fmt % args)
 
         def do_GET(self) -> None:
+            logger.debug("OAuth GET %s", self.path)
             parsed = urlparse(self.path)
-            # Ignore favicon and other noise — only accept the root callback
-            if parsed.path != "/" or "code" not in parsed.query:
+            if "code" not in parsed.query:
+                logger.debug("OAuth: no code in request, ignoring")
                 self.send_response(204)
                 self.end_headers()
                 return
             params = parse_qs(parsed.query)
             code  = params.get("code",  [None])[0]
             state = params.get("state", [None])[0]
+            logger.debug("OAuth: got code (len=%d) state=%s", len(code or ""), state)
             if code:
                 result_queue.put((code, state or ""))
             self.send_response(200)
@@ -72,15 +74,22 @@ def login_microsoft() -> MinecraftAccount:
         client_id=OAUTH_CLIENT_ID,
         redirect_uri=OAUTH_REDIRECT,
     )
+    logger.debug("OAuth: redirect_uri=%s", OAUTH_REDIRECT)
+    logger.debug("OAuth: login_url=%s", login_url)
+
     result_queue: _queue_mod.Queue[tuple[str, str]] = _queue_mod.Queue()
     server = HTTPServer(("127.0.0.1", OAUTH_PORT), _make_handler(result_queue))
     threading.Thread(target=server.serve_forever, daemon=True).start()
+    logger.info("OAuth: callback server listening on %s", OAUTH_REDIRECT)
+
     try:
-        webbrowser.open(login_url)
+        opened = webbrowser.open(login_url)
+        logger.debug("OAuth: webbrowser.open returned %s", opened)
         try:
             code, received_state = result_queue.get(timeout=300)
         except _queue_mod.Empty:
             raise TimeoutError("Timed out waiting for Microsoft login")
+        logger.debug("OAuth: code received, completing login")
         if received_state != state:
             raise ValueError("OAuth state mismatch — possible CSRF")
         result = microsoft_account.complete_login(
