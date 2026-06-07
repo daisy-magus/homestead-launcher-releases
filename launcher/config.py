@@ -9,7 +9,7 @@ from pathlib import Path
 
 from platformdirs import user_config_dir, user_data_dir
 
-VERSION = "1.21.0"
+VERSION = "1.22.0"
 
 APP_NAME   = "BetterLauncher"
 APP_AUTHOR = "Better"
