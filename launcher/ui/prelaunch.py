@@ -78,8 +78,9 @@ class PreLaunchWindow:
         self._acct_type_var: tk.StringVar | None = None
 
     def run(self) -> dict:
+        from ..config import VERSION
         root = tk.Tk(className="Homestead")
-        root.title("Homestead")
+        root.title(f"Homestead  v{VERSION}")
         root.resizable(True, True)
         root.configure(bg=BG)
         set_window_icon(root)
