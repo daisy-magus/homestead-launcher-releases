@@ -12,6 +12,7 @@ Key design decisions:
 """
 from __future__ import annotations
 
+import json
 import logging
 import struct
 import subprocess
@@ -168,7 +169,12 @@ def install_forge(mc_dir: Path, progress: ProgressCallback | None = None) -> Non
     _download_forge_jar(jar, progress)
 
     if progress:
-        progress("Installing Forge…  (an installer window will open — click OK)", 0, 1)
+        progress("Installing Forge…", 0, 1)
+
+    # Forge installer requires launcher_profiles.json to exist
+    profiles_file = mc_dir / "launcher_profiles.json"
+    if not profiles_file.exists():
+        profiles_file.write_text(json.dumps({"profiles": {}, "selectedProfile": "", "clientToken": "", "authenticationDatabase": {}}))
 
     logger.info("Running: %s -jar %s --installClient %s", java, jar, mc_dir)
     result = subprocess.run(
