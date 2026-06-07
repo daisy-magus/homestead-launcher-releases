@@ -55,7 +55,10 @@ def install_desktop_entry() -> None:
     icon_dir     = Path.home() / ".local/share/icons/hicolor/256x256/apps"
     desktop_file = desktop_dir / _DESKTOP_ID
 
-    if desktop_file.exists() and f"Exec={exe}" in desktop_file.read_text():
+    from .config import VERSION
+    current_content = desktop_file.read_text() if desktop_file.exists() else ""
+    up_to_date = f"Exec={exe}" in current_content and f"X-Better-Version={VERSION}" in current_content
+    if up_to_date:
         return
 
     png = Path(sys._MEIPASS) / "assets" / "homestead.png"  # type: ignore[attr-defined]
@@ -77,6 +80,7 @@ def install_desktop_entry() -> None:
         "Categories=Game;\n"
         "StartupWMClass=BetterLauncher\n"
         "StartupNotify=true\n"
+        f"X-Better-Version={VERSION}\n"
     )
     logger.info("Installed desktop entry: %s", desktop_file)
 
