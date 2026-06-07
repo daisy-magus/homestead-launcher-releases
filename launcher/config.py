@@ -9,7 +9,7 @@ from pathlib import Path
 
 from platformdirs import user_config_dir, user_data_dir
 
-VERSION = "1.15.0"
+VERSION = "1.16.0"
 
 APP_NAME   = "HomesteadLauncher"
 APP_AUTHOR = "Homestead"
@@ -32,7 +32,7 @@ GIST_URL = (
 # Prism Launcher's public OAuth client ID — no Azure registration needed
 OAUTH_CLIENT_ID = "c36a9fb6-4f2a-41ff-90bd-ae7cc92031eb"
 OAUTH_PORT      = 18272
-OAUTH_REDIRECT  = f"http://localhost:{OAUTH_PORT}/"
+OAUTH_REDIRECT  = f"http://127.0.0.1:{OAUTH_PORT}/"
 
 # LAN probe target — skip Tailscale when on the home network
 LAN_IP = "192.168.1.52"
