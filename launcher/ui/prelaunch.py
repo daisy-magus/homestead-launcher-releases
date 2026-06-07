@@ -9,9 +9,11 @@ Returns a result dict:
 """
 from __future__ import annotations
 
+import json
 import sys
 import tkinter as tk
 from tkinter import ttk
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -62,6 +64,23 @@ def _ram_range(total_gb: int) -> tuple[int, int, int]:
     return 2, default_gb, max_gb
 
 
+def _load_ram_pref(prefs: Path, min_gb: int, max_gb: int, fallback: int) -> int:
+    try:
+        data = json.loads(prefs.read_text())
+        return max(min_gb, min(int(data["ram_gb"]), max_gb))
+    except Exception:
+        return fallback
+
+
+def _save_ram_pref(prefs: Path, ram_gb: int) -> None:
+    try:
+        data = json.loads(prefs.read_text()) if prefs.exists() else {}
+    except Exception:
+        data = {}
+    data["ram_gb"] = ram_gb
+    prefs.write_text(json.dumps(data))
+
+
 # ── Window ─────────────────────────────────────────────────────────────────────
 
 class PreLaunchWindow:
@@ -90,9 +109,11 @@ class PreLaunchWindow:
         root.protocol("WM_DELETE_WINDOW", lambda: self._exit(root))
         self._root = root
 
+        from ..config import prefs_file
         total_ram = _detect_ram_gb()
         ram_min, ram_def, ram_max = _ram_range(total_ram)
-        self._ram_var = tk.IntVar(value=ram_def)
+        saved_ram = _load_ram_pref(prefs_file(), ram_min, ram_max, ram_def)
+        self._ram_var = tk.IntVar(value=saved_ram)
 
         # ── Header ────────────────────────────────────────────────────────
         tk.Label(
@@ -108,7 +129,7 @@ class PreLaunchWindow:
         content.pack(fill="both", expand=True, padx=20)
 
         self._build_account_card(content)
-        self._build_ram_card(content, total_ram, ram_min, ram_max, ram_def)
+        self._build_ram_card(content, total_ram, ram_min, ram_max, saved_ram)
 
         if self._changelog:
             self._build_changelog_card(content, self._changelog)
@@ -313,9 +334,12 @@ class PreLaunchWindow:
             if not self._account and not self._result.get("pending_microsoft"):
                 return
 
+        from ..config import prefs_file
+        ram_gb = int(self._ram_var.get())
+        _save_ram_pref(prefs_file(), ram_gb)
         self._result = {
             "cancelled": False,
-            "ram_gb":   int(self._ram_var.get()),
+            "ram_gb":   ram_gb,
             "account":  self._account,
             "pending_microsoft": self._result.get("pending_microsoft", False),
         }

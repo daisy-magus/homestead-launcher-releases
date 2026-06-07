@@ -78,3 +78,7 @@ def forge_installer_cache() -> Path:
 
 def crash_log_file() -> Path:
     return _data_dir() / "crash.log"
+
+
+def prefs_file() -> Path:
+    return _config_dir() / "prefs.json"

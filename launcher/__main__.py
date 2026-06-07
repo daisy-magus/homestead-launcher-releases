@@ -192,10 +192,15 @@ def main() -> int:
             host, port = game_ip, game_port
 
         # Mod sync ─────────────────────────────────────────────────────────────
-        if sync_url:
+        # sync server lives on the same machine as the game server; use whichever
+        # IP we chose for the game (LAN or Tailscale) so we don't try to reach
+        # the Tailscale IP when Tailscale isn't connected
+        effective_sync_url = sync_url.replace(game_ip, host) if game_ip and sync_url else sync_url
+
+        if effective_sync_url:
             win.update("Checking for mod updates…", "")
             try:
-                manifest = sync.fetch_manifest(sync_url)
+                manifest = sync.fetch_manifest(effective_sync_url)
 
                 def on_sync(label: str, cur: int, total: int) -> None:
                     name = label.split("/")[-1] if "/" in label else label
@@ -203,7 +208,7 @@ def main() -> int:
                     win.set_progress(cur, max(total, 1))
 
                 stats = sync.sync(
-                    server_url=sync_url,
+                    server_url=effective_sync_url,
                     manifest=manifest,
                     instance_dir=mc_dir,
                     progress=on_sync,
