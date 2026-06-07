@@ -1,0 +1,3 @@
+minecraft-launcher-lib>=6.5,<7
+requests>=2.31
+platformdirs>=4.0

@@ -1,0 +1,49 @@
+version: 1
+
+AppDir:
+  path: ./AppDir
+
+  app_info:
+    id: net.arcanist.homestead-launcher
+    name: Homestead
+    icon: homestead
+    version: !ENV LAUNCHER_VERSION
+    exec: usr/bin/python3
+    exec_args: "$APPDIR/usr/share/homestead/main.py $@"
+
+  apt:
+    arch: amd64
+    sources:
+      - sourceline: deb http://archive.ubuntu.com/ubuntu/ jammy main restricted
+      - sourceline: deb http://archive.ubuntu.com/ubuntu/ jammy universe
+
+    include:
+      - python3
+      - python3-tk
+      - python3-pip
+      - libtk8.6
+      - tk8.6
+      - libx11-6
+      - libxext6
+      - libxrender1
+      - libxft2
+      - libfontconfig1
+
+  files:
+    include:
+      - usr/lib/python3*/**
+    exclude:
+      - usr/lib/python3*/test/**
+      - usr/share/doc
+      - usr/share/man
+
+  after_bundle:
+    - pip3 install --target "$APPDIR/usr/lib/python3/dist-packages"
+        minecraft-launcher-lib requests platformdirs
+    - cp -r ../../launcher "$APPDIR/usr/share/homestead/launcher"
+    - cp ../../main.py "$APPDIR/usr/share/homestead/main.py"
+
+AppImage:
+  arch: x86_64
+  name: Homestead-!ENV LAUNCHER_VERSION-x86_64
+  update-information: gh-releases-zsync|daisy-magus|homestead-launcher|latest|*x86_64.AppImage.zsync
