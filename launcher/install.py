@@ -1,12 +1,15 @@
 """
-Linux .desktop entry + icon installation.
+Linux binary self-install + .desktop entry + icon installation.
 
-Runs once at launch (when frozen binary moves or is installed for the first time).
-No-op on Windows or when running from source (unfrozen).
+On first run from any location (e.g. ~/Downloads), the binary copies
+itself to ~/.local/bin/Homestead and exec-restarts from there. The
+.desktop file always points to that stable path. No-op on Windows or
+when running from source (unfrozen).
 """
 from __future__ import annotations
 
 import logging
+import os
 import shutil
 import subprocess
 import sys
@@ -14,23 +17,44 @@ from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
-_ICON_NAME   = "homestead-launcher"
-_DESKTOP_ID  = "homestead-launcher.desktop"
+_INSTALL_PATH = Path.home() / ".local/bin/Homestead"
+_ICON_NAME    = "homestead-launcher"
+_DESKTOP_ID   = "homestead-launcher.desktop"
 
 
-def install_desktop_entry() -> None:
-    """Install .desktop file and icon into ~/.local/share/. Updates if binary moved."""
+def install_binary() -> None:
+    """
+    Copy binary to ~/.local/bin/Homestead if not already running from there,
+    then exec-restart. Never returns if a copy was needed.
+    """
     if sys.platform == "win32" or not getattr(sys, "frozen", False):
         return
 
-    exe = Path(sys.executable).resolve()
+    current = Path(sys.executable).resolve()
+    target  = _INSTALL_PATH.resolve()
 
-    desktop_dir = Path.home() / ".local/share/applications"
-    icon_dir    = Path.home() / ".local/share/icons/hicolor/256x256/apps"
+    if current == target:
+        return
+
+    target.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(current, target)
+    target.chmod(0o755)
+    logger.info("Installed binary to %s — restarting", target)
+    os.execv(str(target), [str(target)] + sys.argv[1:])
+
+
+def install_desktop_entry() -> None:
+    """Install .desktop file and icon into ~/.local/share/. Updates if needed."""
+    if sys.platform == "win32" or not getattr(sys, "frozen", False):
+        return
+
+    # Always point the .desktop at the stable install path, not sys.executable
+    exe = _INSTALL_PATH
+
+    desktop_dir  = Path.home() / ".local/share/applications"
+    icon_dir     = Path.home() / ".local/share/icons/hicolor/256x256/apps"
     desktop_file = desktop_dir / _DESKTOP_ID
-    icon_file    = icon_dir / f"{_ICON_NAME}.png"
 
-    # Skip if already installed for this exact binary path
     if desktop_file.exists() and f"Exec={exe}" in desktop_file.read_text():
         return
 
@@ -40,7 +64,7 @@ def install_desktop_entry() -> None:
         return
 
     icon_dir.mkdir(parents=True, exist_ok=True)
-    shutil.copy2(png, icon_file)
+    shutil.copy2(png, icon_dir / f"{_ICON_NAME}.png")
 
     desktop_dir.mkdir(parents=True, exist_ok=True)
     desktop_file.write_text(

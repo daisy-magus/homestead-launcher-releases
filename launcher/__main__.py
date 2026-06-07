@@ -85,7 +85,8 @@ def main() -> int:
         return 0
 
     _fix_openal()
-    install.install_desktop_entry()
+    install.install_binary()          # copies to ~/.local/bin/ and exec-restarts if needed
+    install.install_desktop_entry()   # only runs once we're at the stable path
 
     # ── 1. Fetch Gist ──────────────────────────────────────────────────────────
     server_info: dict = {}
