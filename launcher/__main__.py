@@ -258,6 +258,10 @@ def main() -> int:
             exit_code[0] = 1
             return
 
+        # Ensure OpenAL soft driver fix is applied before launch — hardware backend
+        # causes a fatal JVM SIGFPE on this platform.
+        _apply_openal_fix()
+
         # Launch ────────────────────────────────────────────────────────────────
         win.update("Launching Minecraft…", f"Connecting to {host}:{port}")
         try:
@@ -278,7 +282,6 @@ def main() -> int:
 
         # Stream logs — hide window once Minecraft's main menu loads
         ready = [False]
-        openal_fix_applied = [False]
 
         def stream_logs() -> None:
             for line in proc.stdout:
@@ -287,11 +290,6 @@ def main() -> int:
                 if not ready[0] and READY_SIGNAL in stripped:
                     ready[0] = True
                     win.hide()
-                # Detect OpenAL errors and write the soft-driver fix for next launch
-                if not openal_fix_applied[0] and "AL lib: (EE)" in stripped:
-                    if _apply_openal_fix():
-                        openal_fix_applied[0] = True
-                        logger.info("OpenAL error detected — applied drivers=soft fix for next launch")
 
         log_thread = threading.Thread(target=stream_logs, daemon=True)
         log_thread.start()
