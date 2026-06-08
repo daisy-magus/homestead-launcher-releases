@@ -50,16 +50,6 @@ def _apply_openal_fix() -> bool:
     return True
 
 
-def _revert_openal_fix() -> None:
-    """Remove the drivers=soft line if we wrote it — let the system pick its backend."""
-    if sys.platform == "win32":
-        return
-    p = Path.home() / ".alsoftrc"
-    if not p.exists():
-        return
-    lines = [l for l in p.read_text().splitlines() if l.strip() != "drivers=soft"]
-    p.write_text("\n".join(lines).strip() + ("\n" if lines else ""))
-
 
 def _read_crash_info(mc_dir: Path) -> str:
     crash_dir = mc_dir / "crash-reports"
@@ -97,7 +87,6 @@ def main() -> int:
             print("Logged out.")
         return 0
 
-    _revert_openal_fix()   # undo old forced drivers=soft; re-applied only if AL errors detected
     install.install_binary()          # copies to ~/.local/bin/ and exec-restarts if needed
     install.install_desktop_entry()   # only runs once we're at the stable path
 
