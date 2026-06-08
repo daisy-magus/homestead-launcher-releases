@@ -39,14 +39,19 @@ READY_SIGNAL = "Sound engine started"
 # ── Helpers ────────────────────────────────────────────────────────────────────
 
 def _apply_openal_fix() -> bool:
-    """Write drivers=soft to ~/.alsoftrc. Returns True if the file was changed."""
+    """Set drivers=pipewire in ~/.alsoftrc. Returns True if the file was changed."""
     if sys.platform == "win32":
         return False
     p = Path.home() / ".alsoftrc"
     content = p.read_text() if p.exists() else ""
-    if "drivers=soft" in content:
+    # Replace any existing drivers= line (including old drivers=soft which silences audio)
+    import re as _re
+    new_content, n = _re.subn(r"^drivers=.*$", "drivers=pipewire", content, flags=_re.MULTILINE)
+    if n == 0:
+        new_content = content.rstrip() + "\ndrivers=pipewire\n"
+    if new_content == content:
         return False
-    p.write_text(content.rstrip() + "\ndrivers=soft\n")
+    p.write_text(new_content)
     return True
 
 
