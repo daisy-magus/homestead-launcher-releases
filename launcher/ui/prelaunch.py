@@ -64,6 +64,34 @@ def _ram_range(total_gb: int) -> tuple[int, int, int]:
     return 2, default_gb, max_gb
 
 
+_AUDIO_OPTIONS: list[tuple[str, str]] = [
+    ("Auto-detect",  "auto"),
+    ("PipeWire",     "pipewire"),
+    ("PulseAudio",   "pulse"),
+    ("ALSA",         "alsa"),
+    ("None",         "none"),
+]
+_AUDIO_LABELS      = [label for label, _ in _AUDIO_OPTIONS]
+_AUDIO_BY_LABEL    = {label: val  for label, val  in _AUDIO_OPTIONS}
+_AUDIO_LABEL_BY_VAL = {val: label for label, val in _AUDIO_OPTIONS}
+
+
+def _load_audio_pref(prefs: Path) -> str:
+    try:
+        return json.loads(prefs.read_text()).get("audio_driver", "auto")
+    except Exception:
+        return "auto"
+
+
+def _save_audio_pref(prefs: Path, driver: str) -> None:
+    try:
+        data = json.loads(prefs.read_text()) if prefs.exists() else {}
+    except Exception:
+        data = {}
+    data["audio_driver"] = driver
+    prefs.write_text(json.dumps(data))
+
+
 def _load_ram_pref(prefs: Path, min_gb: int, max_gb: int, fallback: int) -> int:
     try:
         data = json.loads(prefs.read_text())
@@ -96,6 +124,7 @@ class PreLaunchWindow:
         self._result: dict = {"cancelled": True}
         self._root: tk.Tk | None = None
         self._ram_var: tk.IntVar | None = None
+        self._audio_var: tk.StringVar | None = None
         self._acct_name_var: tk.StringVar | None = None
         self._acct_type_var: tk.StringVar | None = None
 
@@ -114,6 +143,8 @@ class PreLaunchWindow:
         ram_min, ram_def, ram_max = _ram_range(total_ram)
         saved_ram = _load_ram_pref(prefs_file(), ram_min, ram_max, ram_def)
         self._ram_var = tk.IntVar(value=saved_ram)
+        saved_audio = _load_audio_pref(prefs_file())
+        self._audio_var = tk.StringVar(value=_AUDIO_LABEL_BY_VAL.get(saved_audio, "Auto-detect"))
 
         # ── Header ────────────────────────────────────────────────────────
         tk.Label(
@@ -130,6 +161,8 @@ class PreLaunchWindow:
 
         self._build_account_card(content)
         self._build_ram_card(content, total_ram, ram_min, ram_max, saved_ram)
+        if sys.platform != "win32":
+            self._build_audio_card(content)
 
         if self._changelog:
             self._build_changelog_card(content, self._changelog)
@@ -270,6 +303,29 @@ class PreLaunchWindow:
             bg=PANEL, fg=MUTED, font=(FONT, 7),
         ).pack(anchor="w")
 
+    # ── Audio card ─────────────────────────────────────────────────────────
+
+    def _build_audio_card(self, parent: tk.Frame) -> None:
+        border, frame = bordered_frame(parent)
+        border.pack(fill="x", pady=4)
+
+        inner = tk.Frame(frame, bg=PANEL, padx=14, pady=10)
+        inner.pack(fill="x")
+
+        tk.Label(inner, text="AUDIO BACKEND", bg=PANEL, fg=FG,
+                 font=(FONT, 10, "bold")).pack(anchor="w")
+
+        style = ttk.Style()
+        style.configure("AL.TCombobox",
+                        fieldbackground=BG, background=BTN,
+                        foreground=FG, selectbackground=BG,
+                        selectforeground=CYAN)
+
+        cb = ttk.Combobox(inner, textvariable=self._audio_var,
+                          values=_AUDIO_LABELS, state="readonly",
+                          style="AL.TCombobox", font=(FONT, 9))
+        cb.pack(fill="x", pady=(6, 0))
+
     # ── Changelog card ─────────────────────────────────────────────────────
 
     def _build_changelog_card(self, parent: tk.Frame, text: str) -> None:
@@ -297,12 +353,16 @@ class PreLaunchWindow:
                 return
 
         from ..config import prefs_file
+        prefs = prefs_file()
         ram_gb = int(self._ram_var.get())
-        _save_ram_pref(prefs_file(), ram_gb)
+        _save_ram_pref(prefs, ram_gb)
+        audio_driver = _AUDIO_BY_LABEL.get(self._audio_var.get(), "auto") if self._audio_var else "auto"
+        _save_audio_pref(prefs, audio_driver)
         self._result = {
             "cancelled": False,
-            "ram_gb":   ram_gb,
-            "account":  self._account,
+            "ram_gb":        ram_gb,
+            "audio_driver":  audio_driver,
+            "account":       self._account,
             "pending_microsoft": self._result.get("pending_microsoft", False),
         }
         self._root.destroy()

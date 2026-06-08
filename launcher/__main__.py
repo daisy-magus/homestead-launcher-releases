@@ -38,21 +38,29 @@ READY_SIGNAL = "Sound engine started"
 
 # ── Helpers ────────────────────────────────────────────────────────────────────
 
-def _apply_openal_fix() -> bool:
-    """Set drivers=pipewire in ~/.alsoftrc. Returns True if the file was changed."""
+_OPENAL_DRIVER_MAP = {
+    "auto":     "pipewire,pulse,alsa",
+    "pipewire": "pipewire",
+    "pulse":    "pulse",
+    "alsa":     "alsa",
+    "none":     "null",
+}
+
+
+def _apply_openal_config(driver: str = "auto") -> None:
+    """Write drivers= to ~/.alsoftrc according to user's audio backend choice."""
     if sys.platform == "win32":
-        return False
+        return
+    import re as _re
     p = Path.home() / ".alsoftrc"
     content = p.read_text() if p.exists() else ""
-    # Replace any existing drivers= line (including old drivers=soft which silences audio)
-    import re as _re
-    new_content, n = _re.subn(r"^drivers=.*$", "drivers=pipewire", content, flags=_re.MULTILINE)
+    backend = _OPENAL_DRIVER_MAP.get(driver, "pipewire,pulse,alsa")
+    new_line = f"drivers={backend}"
+    new_content, n = _re.subn(r"^drivers=.*$", new_line, content, flags=_re.MULTILINE)
     if n == 0:
-        new_content = content.rstrip() + "\ndrivers=pipewire\n"
-    if new_content == content:
-        return False
-    p.write_text(new_content)
-    return True
+        new_content = content.rstrip() + f"\n{new_line}\n"
+    if new_content != content:
+        p.write_text(new_content)
 
 
 
@@ -263,9 +271,7 @@ def main() -> int:
             exit_code[0] = 1
             return
 
-        # Ensure OpenAL soft driver fix is applied before launch — hardware backend
-        # causes a fatal JVM SIGFPE on this platform.
-        _apply_openal_fix()
+        _apply_openal_config(result.get("audio_driver", "auto"))
 
         # Launch ────────────────────────────────────────────────────────────────
         win.update("Launching Minecraft…", f"Connecting to {host}:{port}")
